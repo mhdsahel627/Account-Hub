@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+
     'corsheaders',
     'rest_framework',
     'accounts',
@@ -40,6 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -143,3 +151,21 @@ SIMPLE_JWT = {
     'ACCES_TOKEN_LIFETIME' : timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME" : timedelta(days=7),
 }
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME" : os.getenv("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY':os.getenv("CLOUDINARY_API_key"),
+    'API_SCECRET' : os.getenv('CLOUDINARY_API_SECRET')
+}
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+print("CLOUD NAME:", os.getenv("CLOUDINARY_CLOUD_NAME"))
+print("API KEY EXISTS:", bool(os.getenv("CLOUDINARY_API_KEY")))
+print("API SECRET EXISTS:", bool(os.getenv("CLOUDINARY_API_SECRET")))

@@ -1,3 +1,4 @@
+import { data } from "react-router-dom";
 import api from "../../api/axios";
 
 export const registerUser = (data) => {
@@ -10,6 +11,15 @@ export const loginUser = (data) => {
 
 export const getProfile = (token) => {
   return api.get("profile/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+
+export const updateProfile = (data, token) => {
+  return api.patch("profile/", data, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
