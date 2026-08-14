@@ -1,107 +1,487 @@
-# 🏗️ Account Hub — Full-Stack User Management System
+# 🏗️Account Hub
 
-A robust, full-stack role-based user management application built with **React** and **Django REST Framework**. Designed with a modern UI, secure authentication, and a dedicated administrative dashboard for complete user lifecycle management.
+> A modern full-stack account management platform built with **Django REST Framework** and **React**, featuring secure JWT authentication, profile management, admin user management, search, pagination, image uploads, and password management.
+
+---
+
+## 🚀 Project Overview
+
+**Account Hub** is a full-stack account management application designed to provide users with a secure and modern platform for managing their accounts.
+
+The application includes separate experiences for **standard users** and **administrators**.
+
+Users can manage their profile information, update their profile picture, change their password, and securely access their dashboard.
+
+Administrators have additional capabilities such as managing users, creating users, editing user information, deleting users, searching users, and navigating through paginated user lists.
+
+---
+
+## ✨ Features
+
+### 👤 User Features
+
+* User registration
+* Secure user login
+* JWT-based authentication
+* Automatic authentication persistence using localStorage
+* Protected routes
+* User dashboard
+* Profile management
+* Update username and email
+* Profile image upload
+* Cloudinary image storage
+* Change password
+* Logout functionality
+* Responsive modern UI
+* Toast notifications
+
+### 🛡️ Admin Features
+
+* Dedicated admin login
+* Admin-only protected routes
+* Admin dashboard
+* View all users
+* Search users
+* Pagination
+* Create users
+* Edit users
+* Delete users
+* User role identification
+* Separate admin authentication flow
+
+### 🔐 Authentication & Security
+
+* JWT Access Token
+* JWT Refresh Token
+* Protected API endpoints
+* Role-based route protection
+* Admin-only authorization
+* Token persistence
+* Secure password handling through Django authentication
+
+---
+
+## 🧩 Main Application Flow
+
+```text
+                    Account Hub
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+           User Flow             Admin Flow
+              │                     │
+          Register               Admin Login
+              │                     │
+            Login              Admin Dashboard
+              │                     │
+         Dashboard             User Management
+              │                     │
+           Profile        ┌────────┼────────┐
+              │            │        │        │
+      ┌───────┼───────┐   Add     Edit    Delete
+      │       │       │
+   Update   Image   Password
+   Profile  Upload    Change
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Purpose |
-| --- | --- | --- |
-| **Frontend** | React, Redux Toolkit, React Router, Tailwind CSS | UI components, global state management, and routing |
-| **Backend** | Python, Django, Django REST Framework (DRF) | RESTful API development and business logic |
-| **Database** | SQLite | Relational data storage |
-| **Authentication** | JSON Web Tokens (JWT) | Secure stateless user sessions (Access & Refresh tokens) |
-| **File Storage** | Cloudinary | Cloud storage for user profile avatars |
-| **Feedback & UI** | React Toastify | Clean floating notification toasts |
+### Frontend
+
+* React
+* React Router
+* Redux Toolkit
+* Axios
+* Tailwind CSS
+* React Toastify
+* Vite
+
+### Backend
+
+* Python
+* Django
+* Django REST Framework
+* Simple JWT
+* SQLite
+* Cloudinary
+
+### Development Tools
+
+* Git
+* GitHub
+* VS Code
+* Postman
 
 ---
 
-## ✨ Key Features
-
-### 👤 User Capabilities
-
-* **Secure Authentication:** Register, log in, and securely manage sessions using JWT.
-* **Profile Management:** View account details, update usernames/emails, and upload/update profile images.
-* **Password Security:** Authenticated password change requiring verification of the current password.
-* **Protected Routes:** Automatic redirection of unauthenticated users away from private dashboards.
-
-### 👑 Admin Capabilities
-
-* **Admin Dashboard:** Exclusive administrative space restricted by Django staff permissions (`is_staff = true`).
-* **User Lifecycle Management:** Add new users, edit existing user details, and delete accounts directly from the UI.
-* **Advanced User Search:** Filter users dynamically via query parameters.
-* **Optimized Pagination:** Server-side pagination (`PageNumberPagination`) handling large user volumes efficiently.
-
----
-
-## 🔄 System Architecture & Flow
+## 📁 Project Structure
 
 ```text
-[ React Frontend ] ──(Axios + Bearer Token)──> [ Django REST API ]
-       │                                              │
-       ├─> Redux (Auth State)                         ├─> SQLite (Database)
-       └─> Tailwind CSS (UI/UX)                       └─> Cloudinary (Avatars)
-
+AccountHub/
+│
+├── backend/
+│   │
+│   ├── accounts/
+│   │   ├── migrations/
+│   │   ├── admin.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   └── pagination.py
+│   │
+│   ├── config/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── asgi.py
+│   │   └── wsgi.py
+│   │
+│   └── manage.py
+│
+└── frontend/
+    │
+    ├── src/
+    │   ├── components/
+    │   ├── features/
+    │   │   └── auth/
+    │   ├── pages/
+    │   ├── routes/
+    │   ├── api/
+    │   └── main.jsx
+    │
+    ├── package.json
+    └── vite.config.js
 ```
-
-### 🔐 Authentication & Security Flow
-
-1. **Login:** User submits credentials $\rightarrow$ Django generates an **Access Token** and a **Refresh Token**.
-2. **State Storage:** Tokens are stored securely, and auth state is managed globally via **Redux**.
-3. **Protected APIs:** Axios automatically attaches the Bearer token to requests (`Authorization: Bearer <token>`).
-4. **Authorization Checks:** Frontend protected routes verify token validity and user roles (`is_staff`) before rendering administrative views.
 
 ---
 
-## 🚀 Core Technical Highlights
+## 🔑 JWT Authentication
 
-* **Global State Management (Redux Toolkit):** Keeps authentication state (`user`, `accessToken`, `isAuthenticated`) synchronized across navigation bars, dashboards, and protected routes.
-* **Centralized API Handling (Axios):** Configured with a base URL and interceptors to streamline requests and token management.
-* **Cloud-based Image Uploads:** Profile pictures bypass local server storage and go straight to **Cloudinary** using `FormData`, returning optimized URLs saved in the database.
-* **Search & Pagination Integration:** Built to handle high-performance queries cleanly:
-```http
-GET /admin/users/?search=username&page=1
+Account Hub uses **JSON Web Tokens (JWT)** for authentication.
 
+The authentication flow works as follows:
+
+```text
+Login
+  ↓
+Backend validates credentials
+  ↓
+Access Token + Refresh Token
+  ↓
+Tokens stored in Redux/localStorage
+  ↓
+Access Token sent with API requests
+  ↓
+Protected API access
 ```
 
-
+The application also uses protected routes to prevent unauthorized users from accessing restricted pages.
 
 ---
 
-## ⚙️ Getting Started (Local Development)
+## 🛡️ Role-Based Access
 
-### Prerequisites
+Account Hub separates standard users and administrators.
 
-* Node.js & npm installed
-* Python 3.x installed
-* Cloudinary account (for image uploads)
+### Standard User
+
+Can access:
+
+* Dashboard
+* Profile
+* Change Password
+* Account information
+
+### Administrator
+
+Can access:
+
+* Admin Dashboard
+* User listing
+* Search
+* Pagination
+* Add User
+* Edit User
+* Delete User
+
+Admin-only pages are protected using a dedicated route guard.
+
+---
+
+## 🔎 Search & Pagination
+
+The admin dashboard supports server-side user search and pagination.
+
+Example API request:
+
+```text
+GET /api/admin/users/?search=sahel&page=1
+```
+
+The backend returns paginated data:
+
+```json
+{
+    "count": 7,
+    "next": "...?page=2",
+    "previous": null,
+    "results": []
+}
+```
+
+This allows the frontend to navigate between user pages without loading every user at once.
+
+---
+
+## 🖼️ Profile Image Upload
+
+Users can upload and update their profile image.
+
+The frontend sends the image using `FormData`.
+
+The backend integrates with **Cloudinary** for cloud-based image storage.
+
+```text
+User selects image
+       ↓
+React FormData
+       ↓
+Django REST API
+       ↓
+Cloudinary
+       ↓
+Image URL stored with user profile
+```
+
+---
+
+## 🔐 Change Password
+
+Authenticated users can change their password by providing:
+
+```json
+{
+    "old_password": "current_password",
+    "new_password": "new_password"
+}
+```
+
+The endpoint requires JWT authentication.
+
+---
+
+## 🌐 API Overview
+
+| Method | Endpoint                 | Purpose           |
+| ------ | ------------------------ | ----------------- |
+| POST   | `/api/register/`         | Register user     |
+| POST   | `/api/login/`            | User login        |
+| POST   | `/api/token/refresh/`    | Refresh JWT       |
+| GET    | `/api/profile/`          | Get profile       |
+| PATCH  | `/api/profile/`          | Update profile    |
+| POST   | `/api/change-password/`  | Change password   |
+| POST   | `/api/admin/login/`      | Admin login       |
+| GET    | `/api/admin/users/`      | List/search users |
+| POST   | `/api/admin/users/add/`  | Create user       |
+| PATCH  | `/api/admin/users/<id>/` | Update user       |
+| DELETE | `/api/admin/users/<id>/` | Delete user       |
+
+---
+
+## ⚙️ Installation & Setup
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/account-hub.git
-cd account-hub
-
+git clone <your-repository-url>
+cd AccountHub
 ```
 
-### 2. Backend Setup (Django)
+---
+
+### 2. Backend Setup
+
+Navigate to the backend:
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-
 ```
 
-### 3. Frontend Setup (React)
+Create a virtual environment:
+
+```bash
+python -m venv vara
+```
+
+Activate it on Windows:
+
+```bash
+vara\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run migrations:
+
+```bash
+python manage.py migrate
+```
+
+Start the Django server:
+
+```bash
+python manage.py runserver
+```
+
+Backend will run on:
+
+```text
+http://127.0.0.1:8000/
+```
+
+---
+
+### 3. Frontend Setup
+
+Open another terminal:
 
 ```bash
 cd frontend
-npm install
-npm run dev
-
 ```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Frontend will run on:
+
+```text
+http://localhost:5173/
+```
+
+---
+
+## 🔑 Environment Variables
+
+Create a `.env` file inside the backend project and configure the required Cloudinary credentials.
+
+```env
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+> Never commit secret keys or environment variables to GitHub.
+
+---
+
+## 🧪 API Testing
+
+The backend APIs can be tested using **Postman**.
+
+Authentication-protected requests use:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+Example:
+
+```text
+GET /api/profile/
+```
+
+with:
+
+```text
+Authorization: Bearer eyJ...
+```
+
+---
+
+## 📱 UI & UX
+
+The frontend focuses on a modern account-management experience with:
+
+* Dark modern interface
+* Gradient backgrounds
+* Glassmorphism-inspired cards
+* Responsive layouts
+* Interactive buttons
+* Loading states
+* Form validation feedback
+* Toast notifications
+* Profile image previews
+* Admin management interface
+
+---
+
+## 📈 Future Improvements
+
+Potential future enhancements include:
+
+* Refresh token interceptor with Axios
+* Automatic access-token refresh
+* Forgot password / password reset
+* Email verification
+* Advanced admin analytics
+* User activation/deactivation
+* Sorting and filtering
+* Confirmation modal before deletion
+* Better form validation
+* Deployment with AWS
+* Production PostgreSQL database
+* Automated testing
+* CI/CD pipeline
+
+---
+
+## 🎯 Learning Objectives
+
+This project demonstrates practical implementation of:
+
+* React component architecture
+* React Hooks
+* Redux Toolkit
+* React Router
+* Protected Routes
+* Role-based authorization
+* Axios API integration
+* Django REST Framework
+* JWT authentication
+* REST API design
+* CRUD operations
+* Search
+* Pagination
+* File uploads
+* Cloudinary integration
+* PostgreSQL/SQLite database concepts
+* Git & GitHub workflow
+
+---
+
+## 👨‍💻 Author
+
+**Sahel**
+
+Full-Stack Developer | Python | Django | React
+
+---
+
+## 📄 License
+
+This project is created for learning and portfolio purposes.
