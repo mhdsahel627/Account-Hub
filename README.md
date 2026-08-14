@@ -1,472 +1,107 @@
-🏗️ Account Hub — Project Overview
+# 🏗️ Account Hub — Full-Stack User Management System
 
-Account Hub is a full-stack user account management system built using:
+A robust, full-stack role-based user management application built with **React** and **Django REST Framework**. Designed with a modern UI, secure authentication, and a dedicated administrative dashboard for complete user lifecycle management.
 
-Frontend  → React + Redux + Axios + Tailwind CSS
-Backend   → Django + Django REST Framework
-Database  → SQLite
-Authentication → JWT
-Image Storage → Cloudinary
+---
 
-Main purpose:
+## 🛠️ Tech Stack
 
-Users can create and manage their accounts, while administrators can manage users through a separate admin dashboard.
+| Layer | Technology | Purpose |
+| --- | --- | --- |
+| **Frontend** | React, Redux Toolkit, React Router, Tailwind CSS | UI components, global state management, and routing |
+| **Backend** | Python, Django, Django REST Framework (DRF) | RESTful API development and business logic |
+| **Database** | SQLite | Relational data storage |
+| **Authentication** | JSON Web Tokens (JWT) | Secure stateless user sessions (Access & Refresh tokens) |
+| **File Storage** | Cloudinary | Cloud storage for user profile avatars |
+| **Feedback & UI** | React Toastify | Clean floating notification toasts |
 
-🔄 Overall Architecture
-                    ACCOUNT HUB
-                         │
-          ┌──────────────┴──────────────┐
-          ↓                             ↓
-      React Frontend              Django Backend
-          │                             │
-    Redux / Axios                 Django REST API
-          │                             │
-          └──────────────┬──────────────┘
-                         ↓
-                    Database
-                         │
-                         ↓
-                     Cloudinary
-                   Profile Images
-👤 USER FEATURES
-1. Registration
+---
 
-User can create an account using:
+## ✨ Key Features
 
-Username
-Email
-Password
+### 👤 User Capabilities
 
-Frontend sends:
+* **Secure Authentication:** Register, log in, and securely manage sessions using JWT.
+* **Profile Management:** View account details, update usernames/emails, and upload/update profile images.
+* **Password Security:** Authenticated password change requiring verification of the current password.
+* **Protected Routes:** Automatic redirection of unauthenticated users away from private dashboards.
 
-React
-  ↓
-Axios POST
-  ↓
-Django API
-  ↓
-User created
-2. Login
-
-Login uses JWT authentication.
-
-Username + Password
-        ↓
-Django
-        ↓
-Access Token
-Refresh Token
-        ↓
-Redux
-        ↓
-localStorage
+### 👑 Admin Capabilities
 
-Two tokens:
+* **Admin Dashboard:** Exclusive administrative space restricted by Django staff permissions (`is_staff = true`).
+* **User Lifecycle Management:** Add new users, edit existing user details, and delete accounts directly from the UI.
+* **Advanced User Search:** Filter users dynamically via query parameters.
+* **Optimized Pagination:** Server-side pagination (`PageNumberPagination`) handling large user volumes efficiently.
 
-Access Token
+---
 
-Used for accessing protected APIs.
+## 🔄 System Architecture & Flow
 
-Example:
+```text
+[ React Frontend ] ──(Axios + Bearer Token)──> [ Django REST API ]
+       │                                              │
+       ├─> Redux (Auth State)                         ├─> SQLite (Database)
+       └─> Tailwind CSS (UI/UX)                       └─> Cloudinary (Avatars)
 
-Authorization: Bearer <access_token>
-Refresh Token
+```
 
-Used to obtain a new access token when the access token expires.
+### 🔐 Authentication & Security Flow
 
-🔐 Authentication & Authorization
+1. **Login:** User submits credentials $\rightarrow$ Django generates an **Access Token** and a **Refresh Token**.
+2. **State Storage:** Tokens are stored securely, and auth state is managed globally via **Redux**.
+3. **Protected APIs:** Axios automatically attaches the Bearer token to requests (`Authorization: Bearer <token>`).
+4. **Authorization Checks:** Frontend protected routes verify token validity and user roles (`is_staff`) before rendering administrative views.
 
-We implemented:
+---
 
-JWT Authentication
-JWTAuthentication
-ProtectedRoute
+## 🚀 Core Technical Highlights
 
-Normal authenticated user:
+* **Global State Management (Redux Toolkit):** Keeps authentication state (`user`, `accessToken`, `isAuthenticated`) synchronized across navigation bars, dashboards, and protected routes.
+* **Centralized API Handling (Axios):** Configured with a base URL and interceptors to streamline requests and token management.
+* **Cloud-based Image Uploads:** Profile pictures bypass local server storage and go straight to **Cloudinary** using `FormData`, returning optimized URLs saved in the database.
+* **Search & Pagination Integration:** Built to handle high-performance queries cleanly:
+```http
+GET /admin/users/?search=username&page=1
 
-/dashboard
-/profile
-/change-password
+```
 
-Unauthenticated user:
 
-→ Login
-👑 ADMIN AUTHORIZATION
 
-Admin users have:
+---
 
-is_staff = true
+## ⚙️ Getting Started (Local Development)
 
-ProtectedRoute checks:
+### Prerequisites
 
-isAuthenticated?
-       ↓
-     YES
-       ↓
-adminOnly?
-       ↓
-is_staff?
-       ↓
-YES → Admin Dashboard
-NO  → User Dashboard
+* Node.js & npm installed
+* Python 3.x installed
+* Cloudinary account (for image uploads)
 
-So normal users cannot access admin pages.
+### 1. Clone the Repository
 
-👤 USER DASHBOARD
+```bash
+git clone https://github.com/your-username/account-hub.git
+cd account-hub
 
-Dashboard provides:
+```
 
-Welcome message
-User information
-Profile navigation
-Account overview
-Logout
-🧑 PROFILE MANAGEMENT
+### 2. Backend Setup (Django)
 
-User can:
-
-View profile
-Update username
-Update email
-Upload profile image
-View account ID
-View account type
-
-Profile image is uploaded to Cloudinary.
-
-Flow:
-
-Select Image
-     ↓
-FormData
-     ↓
-Axios PATCH
-     ↓
-Django
-     ↓
-Cloudinary
-     ↓
-Image URL
-     ↓
-User Profile
-🔑 CHANGE PASSWORD
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
 
-User provides:
+```
 
-Old Password
-New Password
+### 3. Frontend Setup (React)
 
-Backend verifies the old password before changing it.
+```bash
+cd frontend
+npm install
+npm run dev
 
-This is important because password changes should be authenticated operations.
-
-👑 ADMIN DASHBOARD
-
-Admin gets a separate dashboard.
-
-Features:
-
-User List
-
-Admin can see:
-
-Username
-Email
-Profile
-Search
-
-Admin can search users.
-
-Search
- ↓
-API
- ↓
-Filtered users
-Pagination
-
-Instead of returning every user:
-
-Page 1
-Page 2
-Page 3
-...
-
-Backend handles pagination.
-
-We configured DRF pagination with:
-
-PageNumberPagination
-➕ ADMIN ADD USER
-
-Admin can create a new user.
-
-Admin
- ↓
-Add User
- ↓
-Form
- ↓
-POST API
- ↓
-Django
- ↓
-Database
-✏️ ADMIN EDIT USER
-
-Admin can update an existing user.
-
-User
- ↓
-Edit
- ↓
-PATCH
- ↓
-Django API
- ↓
-Database
-🗑️ ADMIN DELETE USER
-
-Admin can delete a user.
-
-Delete
- ↓
-Confirmation
- ↓
-DELETE API
- ↓
-Database
-
-Frontend removes the deleted user from the displayed list.
-
-🔎 SEARCH + PAGINATION
-
-This was one of the important practical features.
-
-Frontend sends:
-
-/admin/users/?search=sahel&page=1
-
-Backend returns:
-
-{
-    "count": 7,
-    "next": "...",
-    "previous": null,
-    "results": [...]
-}
-
-React then displays only:
-
-results
-
-and uses:
-
-next
-previous
-
-to control pagination buttons.
-
-🧩 REACT CONCEPTS USED
-
-This project demonstrates several React concepts.
-
-useState
-
-Used for:
-
-Form data
-Loading state
-Search
-Pagination
-Users
-Profile image
-Messages
-
-Example:
-
-const [users, setUsers] = useState([]);
-useEffect
-
-Used for API fetching.
-
-Example concept:
-
-Component loads
-      ↓
-useEffect
-      ↓
-API request
-      ↓
-Update state
-      ↓
-UI re-renders
-useSelector
-
-Reads Redux state:
-
-const { user, accessToken } = useSelector(
-    state => state.auth
-);
-useDispatch
-
-Used to update Redux:
-
-dispatch(loginSuccess(...))
-
-and:
-
-dispatch(logout())
-React Router
-
-Used for navigation:
-
-/login
-/register
-/dashboard
-/profile
-/change-password
-
-
-/admin/login
-/admin/dashboard
-/admin/users/add
-/admin/users/:id/edit
-🧠 REDUX
-
-Authentication state is stored globally.
-
-auth
-├── user
-├── accessToken
-├── refreshToken
-└── isAuthenticated
-
-Why Redux?
-
-Because many components need authentication information.
-
-For example:
-
-Dashboard
-Profile
-Admin Dashboard
-ProtectedRoute
-
-all need to know whether the user is authenticated.
-
-🌐 AXIOS
-
-Axios is used to communicate with Django.
-
-Example:
-
-api.get("profile/")
-
-Protected request:
-
-headers: {
-    Authorization: `Bearer ${token}`
-}
-
-Central Axios configuration:
-
-api/axios.js
-
-So API calls don't need to recreate the base URL every time.
-
-🐍 DJANGO REST FRAMEWORK
-
-Backend provides REST APIs for:
-
-Register
-Login
-Profile
-Update Profile
-Change Password
-Admin Users
-Add User
-Edit User
-Delete User
-📄 HTTP METHODS
-
-You used the important CRUD methods:
-
-Method	Purpose
-GET	Fetch data
-POST	Create data
-PATCH	Update data
-DELETE	Delete data
-
-Example:
-
-GET    /admin/users/
-POST   /admin/users/add/
-PATCH  /admin/users/:id/
-DELETE /admin/users/:id/
-🔒 HTTP STATUS / AUTHENTICATION
-
-You encountered:
-
-401 Unauthorized
-
-when token was missing/invalid.
-
-Example:
-
-{
-    "detail": "Authentication credentials were not provided."
-}
-
-This helped verify that protected APIs actually require authentication.
-
-🖼️ CLOUDINARY
-
-Used for profile images instead of storing image files directly in the database.
-
-React
- ↓
-Image
- ↓
-Django
- ↓
-Cloudinary
- ↓
-Image URL
- ↓
-Database/Profile
-🎨 UI / UX
-
-Frontend uses:
-
-Tailwind CSS
-Gradient backgrounds
-Cards
-Responsive layouts
-Loading states
-Toast notifications
-Search
-Pagination
-Form feedback
-Profile image preview
-🔔 TOASTIFY
-
-For user feedback:
-
-Login successful
-Profile updated
-Registration failed
-Delete successful
-
-Instead of showing everything as permanent text inside the page.
-
-🛡️ SECURITY CONCEPTS
-
-Important security features:
-
-JWT authentication
-Protected routes
-Admin-only routes
-Password hashing through Django
-Bearer token authentication
-Backend permission checks
-Authentication required for sensitive APIs
+```
