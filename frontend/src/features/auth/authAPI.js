@@ -25,3 +25,51 @@ export const updateProfile = (data, token) => {
     },
   });
 };
+
+export const adminLogin = (data) => {
+  return api.post("admin/login/", data);
+};
+
+export const getUsers = (token, search = "", page = 1) => {
+  return api.get("admin/users/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: {
+      search: search,
+      page: page,
+    },
+  });
+};
+
+export const createUser = (data,token) => {
+  return api.post('admin/users/add/',data, {
+    headers : {
+      Authorization : `Bearer ${token}`,
+    },
+  });
+};
+
+export const updateUser = (id, data, token) => {
+  return api.patch(`admin/users/${id}/`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const deleteUser = (id, token) => {
+  return api.delete(`admin/users/${id}/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const changePassword = (data, token) => {
+  return api.post("change-password/",data, {
+    headers : {
+      Authorization : `Bearer ${token}`,
+    },
+  });
+};

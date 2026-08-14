@@ -23,18 +23,45 @@ const Profile = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-  const [preview, setPreview] = useState(user?.profile_image || "");
+  const [preview, setPreview] = useState("");
 
+  // Get fresh profile using access token
   useEffect(() => {
-    if (user) {
-      setFormData({
-        username: user.username || "",
-        email: user.email || "",
-      });
-    }
-  }, [user]);
+    const fetchProfile = async () => {
+      if (!accessToken) return;
+
+      try {
+        const response = await getProfile(accessToken);
+
+        const profile = response.data;
+
+        setFormData({
+          username: profile.username || "",
+          email: profile.email || "",
+        });
+
+        setPreview(profile.profile_image || "");
+
+        // Keep tokens, update user
+        dispatch(
+          loginSuccess({
+            access: accessToken,
+            refresh: refreshToken,
+            user: profile,
+          })
+        );
+      } catch (error) {
+        console.log("PROFILE ERROR:", error.response?.data);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchProfile();
+  }, [accessToken, refreshToken, dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -50,29 +77,35 @@ const Profile = () => {
 
     setSelectedImage(file);
     setPreview(URL.createObjectURL(file));
+    setMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!accessToken) {
+      setMessage("Session expired. Please login again.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
     try {
-
       const data = new FormData();
 
-      data.append('username', formData.username);
-      data.append('email',formData.email);
+      data.append("username", formData.username);
+      data.append("email", formData.email);
 
       if (selectedImage) {
-        data.append('profile_image', selectedImage);
+        data.append("profile_image", selectedImage);
       }
 
       const response = await updateProfile(data, accessToken);
 
       console.log("PROFILE UPDATED:", response.data);
 
+      // Update Redux while preserving tokens
       dispatch(
         loginSuccess({
           access: accessToken,
@@ -81,47 +114,138 @@ const Profile = () => {
         })
       );
 
+      setFormData({
+        username: response.data.username || "",
+        email: response.data.email || "",
+      });
+
+      setPreview(response.data.profile_image || "");
+      setSelectedImage(null);
+
       setMessage("Profile updated successfully!");
-      setSelectedImage(null)
     } catch (error) {
       console.log("PROFILE UPDATE ERROR:", error);
       console.log("ERROR RESPONSE:", error.response?.data);
 
-      setMessage("Failed to update profile.");
+      setMessage(
+        error.response?.data?.detail ||
+        "Failed to update profile."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-4 py-10">
-      <div className="mx-auto max-w-2xl">
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+          <p className="mt-4 text-slate-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
-        <Card className="w-full">
-          <h1 className="text-3xl font-bold text-white text-center">
-            My Profile
+  return (
+    <div className="min-h-screen bg-slate-950 px-4 py-10 text-white">
+
+      {/* Background glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-600/20 blur-3xl" />
+        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-purple-600/20 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto max-w-3xl">
+
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="mb-5 text-sm text-slate-400 transition hover:text-white"
+          >
+            ← Back to Dashboard
+          </button>
+
+          <h1 className="text-4xl font-bold tracking-tight">
+            Your Profile
           </h1>
 
-          <p className="mt-2 text-center text-slate-300">
-            Manage your account information
+          <p className="mt-2 text-slate-400">
+            Manage your Account Hub identity and personal information.
           </p>
+        </div>
+        {/* Security */}
+        <div className="border-t border-white/10 bg-black/10 p-8">
 
-          <div className="mt-6 flex flex-col items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-            {preview ? (
-              <img
-                src={preview}
-                alt="Profile"
-                className="h-28 w-28 rounded-full object-cover border-4 border-indigo-500"
-              />
-            ) : (
-              <div className="h-28 w-28 rounded-full bg-slate-800 border-4 border-indigo-500 flex items-center justify-center text-slate-400">
-                No Image
+            <div>
+              <h3 className="text-lg font-semibold">
+                Security
+              </h3>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Keep your account secure by regularly updating your password.
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate("/change-password")}
+              className="rounded-xl border border-indigo-400/20 bg-indigo-500/10 px-5 py-3 text-sm font-semibold text-indigo-300 transition hover:bg-indigo-500/20"
+            >
+              🔐 Change Password
+            </button>
+
+          </div>
+
+        </div>
+
+        <Card className="overflow-hidden border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/30 backdrop-blur-xl">
+
+          {/* Profile Hero */}
+          <div className="border-b border-white/10 p-8">
+
+            <div className="flex flex-col items-center gap-6 sm:flex-row">
+
+              {/* Profile image */}
+              <div className="relative">
+
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Profile"
+                    className="h-32 w-32 rounded-3xl object-cover ring-4 ring-indigo-500/30 shadow-2xl"
+                  />
+                ) : (
+                  <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 text-5xl font-bold shadow-2xl">
+                    {formData.username?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+
+                {/* Online indicator */}
+                <span className="absolute bottom-2 right-2 h-5 w-5 rounded-full border-4 border-slate-950 bg-emerald-400" />
               </div>
-            )}
 
-            <label className="cursor-pointer rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
-              Choose Profile Image
+              <div className="text-center sm:text-left">
+                <h2 className="text-2xl font-bold">
+                  {formData.username || "User"}
+                </h2>
+
+                <p className="mt-1 text-slate-400">
+                  {formData.email}
+                </p>
+
+                <p className="mt-3 inline-flex rounded-full border border-indigo-400/20 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
+                  Account Hub Member
+                </p>
+              </div>
+
+            </div>
+
+            {/* Image upload */}
+            <label className="mt-7 inline-flex cursor-pointer items-center rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold transition hover:bg-white/10">
+              📷 Change Profile Picture
 
               <input
                 type="file"
@@ -131,47 +255,90 @@ const Profile = () => {
               />
             </label>
 
+            {selectedImage && (
+              <p className="mt-2 text-xs text-indigo-300">
+                New image selected — save changes to apply it.
+              </p>
+            )}
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          {/* Form */}
+          <div className="p-8">
 
-            <Input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-            />
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold">
+                Personal Information
+              </h3>
 
-            <Input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-            />
+              <p className="mt-1 text-sm text-slate-500">
+                Update the information associated with your account.
+              </p>
+            </div>
 
-            <Button type="submit">
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
+            <form onSubmit={handleSubmit} className="space-y-5">
 
-          </form>
+              <Input
+                type="text"
+                name="username"
+                placeholder="Username"
+                value={formData.username}
+                onChange={handleChange}
+              />
 
-          {message && (
-            <p className="mt-5 text-center text-emerald-400">
-              {message}
-            </p>
-          )}
+              <Input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+              />
 
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="mt-5 w-full text-slate-400 hover:text-white"
-          >
-            ← Back to Dashboard
-          </button>
+              <Button type="submit">
+                {loading ? "Saving Changes..." : "Save Changes"}
+              </Button>
+
+            </form>
+
+            {message && (
+              <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-center text-sm text-emerald-300">
+                ✓ {message}
+              </div>
+            )}
+
+          </div>
+
+          {/* Account information */}
+          <div className="border-t border-white/10 bg-black/10 p-8">
+
+            <h3 className="text-lg font-semibold">
+              Account Information
+            </h3>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-wider text-slate-500">
+                  Account ID
+                </p>
+                <p className="mt-1 font-medium text-slate-200">
+                  #{user?.id}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-wider text-slate-500">
+                  Account Type
+                </p>
+                <p className="mt-1 font-medium text-slate-200">
+                  {user?.is_staff ? "Administrator" : "Standard User"}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
 
         </Card>
-
       </div>
     </div>
   );
